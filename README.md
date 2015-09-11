@@ -7,14 +7,13 @@ By default it downloads the last /r/wallpapers image
 - [node](http://nodejs.org)
 
 ## Install
-'''bash
+```bash
 git clone https://github.com/telpalbrox/RedditWallpaper.git
 cd RedditWallpaper
 npm install1
-'''
+```
 
 ## Usage
-'''bash
+```bash
 node index.js [ subrddit ]
-'''
-'''
+```
