@@ -88,7 +88,6 @@ function downloadImage(downloadDirectory, imageUrl, removeImages) {
         if(removeImages) {
             removeAllFilesFolder(downloadDirectory);
         }
-        console.log('descargando: ' + imageUrl);
         request(imageUrl).pipe(fs.createWriteStream(downloadPath));
     }
 }
