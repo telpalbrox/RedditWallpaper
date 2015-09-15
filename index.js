@@ -4,32 +4,42 @@ var path = require('path');
 var fs = require('fs');
 
 var IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID || '5beb783df007abb';
+
 // check if user pass a subreddit
 var subReddit = process.argv[2] || 'wallpapers';
+// if no parameter is received stop execution
+if (!subReddit) {
+  process.exit();
+}
+var wallpapersPath = 'https://www.reddit.com/r/' + subReddit + '/hot.json?t=week&limit=10';
+
 // get download directory, by default /{userHome}/.redditWallpapers
 var downloadDirectory = path.join(getUserHome(), '.redditWallpapers');
 
 // request reddit API last hot posts
-request('https://www.reddit.com/r/' + subReddit + '/hot.json?t=week&limit=10', function(error, response, body) {
-    if(error || response.statusCode != 200) {
-        console.error(error);
-        return;
+request(wallpapersPath, function(error, response, body) {
+    if (error || response.statusCode != 200) {
+        return console.error(error);
     }
 
     var redditResponse = JSON.parse(body);
+
     // iterate posts
-    for(var i = 0; i < redditResponse.data.children.length; i++) {
+    for (var i = 0; i < redditResponse.data.children.length; i++) {
         var item = redditResponse.data.children[i];
+
         // only download imgur links
-        if(item.data.domain.indexOf('imgur.com') === -1) {
+        if (item.data.domain.indexOf('imgur.com') === -1) {
             continue;
         }
 
         // create folder if not exists
         mkdirSync(downloadDirectory);
         var imageUrl = redditResponse.data.children[i].data.url;
-        if(isAlbum(imageUrl)) {
+
+        if (isAlbum(imageUrl)) {
             var albumId = imageUrl.substr(imageUrl.lastIndexOf('/') + 1, imageUrl.length);
+
             request({
                 url: 'https://api.imgur.com/3/album/' + albumId,
                 headers: {
@@ -42,12 +52,13 @@ request('https://www.reddit.com/r/' + subReddit + '/hot.json?t=week&limit=10', f
                 }
                 var imgurResponse = JSON.parse(body);
                 removeAllFilesFolder(downloadDirectory);
-                for(var j = 0; j < imgurResponse.data.images.length; j++) {
+                for (var j = 0; j < imgurResponse.data.images.length; j++) {
                     downloadImage(downloadDirectory, imgurResponse.data.images[j].link, false);
                 }
             });
+
         } else {
-            if(imageUrl.indexOf('.jpg') === -1) {
+            if (imageUrl.indexOf('.jpg') === -1) {
                 imageUrl += '.jpg';
             }
             // only download image if not exists
@@ -83,11 +94,17 @@ function removeAllFilesFolder(folderPath) {
 
 function downloadImage(downloadDirectory, imageUrl, removeImages) {
     var downloadPath = path.join(downloadDirectory, imageUrl.replace(/http:\/\//gi, '').replace(/\//gi, ''));
+
     // if not exists download image
-    if(!fs.existsSync(downloadPath)) {
-        if(removeImages) {
+    if (!fs.existsSync(downloadPath)) {
+
+        if (removeImages) {
             removeAllFilesFolder(downloadDirectory);
         }
         request(imageUrl).pipe(fs.createWriteStream(downloadPath));
     }
 }
+
+process.on('exit', function (){
+  console.log('You did not enter parameters');
+});
