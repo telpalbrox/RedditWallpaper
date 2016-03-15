@@ -1,16 +1,13 @@
-#!/usr/bin/node
+#!/usr/local/bin/node
 var request = require('request');
 var path = require('path');
 var fs = require('fs');
+var Magic = require('mmmagic').Magic;
 
 var IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID || '5beb783df007abb';
 
 // check if user pass a subreddit
 var subReddit = process.argv[2] || 'wallpapers';
-// if no parameter is received stop execution
-if (!subReddit) {
-  process.exit();
-}
 var wallpapersPath = 'https://www.reddit.com/r/' + subReddit + '/hot.json?t=week&limit=10';
 
 // get download directory, by default /{userHome}/.redditWallpapers
@@ -58,9 +55,6 @@ request(wallpapersPath, function(error, response, body) {
             });
 
         } else {
-            if (imageUrl.indexOf('.jpg') === -1) {
-                imageUrl += '.jpg';
-            }
             // only download image if not exists
             downloadImage(downloadDirectory, imageUrl, true);
         }
@@ -101,10 +95,13 @@ function downloadImage(downloadDirectory, imageUrl, removeImages) {
         if (removeImages) {
             removeAllFilesFolder(downloadDirectory);
         }
-        request(imageUrl).pipe(fs.createWriteStream(downloadPath));
+        request(imageUrl).pipe(fs.createWriteStream(downloadPath)).on('finish', function() {
+            var magic = new Magic();
+            magic.detectFile(downloadPath, function(err, result) {
+                if (err) throw err;
+                var extension = result.split(' ')[0].toLowerCase();
+                fs.rename(downloadPath, downloadPath + '.' + extension);
+            });
+        });
     }
 }
-
-process.on('exit', function (){
-  console.log('You did not enter parameters');
-});
