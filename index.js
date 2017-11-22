@@ -24,15 +24,19 @@ request(wallpapersPath, function(error, response, body) {
     // iterate posts
     for (var i = 0; i < redditResponse.data.children.length; i++) {
         var item = redditResponse.data.children[i];
+        var domain = item.data.domain;
+        var isImgur = domain.indexOf('imgur.com') !== -1;
+        var isRedditImage = domain.indexOf('i.redd.it') !== -1;
 
-        // only download imgur links
-        if (item.data.domain.indexOf('imgur.com') === -1) {
+        // only download imgur reddit / links
+        if (!isImgur && !isRedditImage) {
             continue;
         }
 
         // create folder if not exists
         mkdirSync(downloadDirectory);
-        var imageUrl = redditResponse.data.children[i].data.url;
+        var postData = redditResponse.data.children[i].data;
+        var imageUrl = isImgur ? postData.url : postData.preview.images[0].source.url;
 
         if (isAlbum(imageUrl)) {
             var albumId = imageUrl.substr(imageUrl.lastIndexOf('/') + 1, imageUrl.length);
@@ -55,7 +59,7 @@ request(wallpapersPath, function(error, response, body) {
             });
 
         } else {
-            // only download image if not exists
+            // only download image if it doesn't exists
             downloadImage(downloadDirectory, imageUrl, true);
         }
         return;
