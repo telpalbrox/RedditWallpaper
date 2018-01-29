@@ -1,17 +1,17 @@
 #!/usr/local/bin/node
-var request = require('request');
-var path = require('path');
-var fs = require('fs');
-var Magic = require('mmmagic').Magic;
+const request = require('request');
+const path = require('path');
+const fs = require('fs');
+const Magic = require('mmmagic').Magic;
 
-var IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID || '5beb783df007abb';
+const IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID || '5beb783df007abb';
 
-// check if user pass a subreddit
-var subReddit = process.argv[2] || 'wallpapers';
-var wallpapersPath = 'https://www.reddit.com/r/' + subReddit + '/hot.json?t=week&limit=10';
+// check if the user is passing a subreddit
+const subReddit = process.argv[2] || 'wallpapers';
+const wallpapersPath = 'https://www.reddit.com/r/' + subReddit + '/hot.json?t=week&limit=10';
 
 // get download directory, by default /{userHome}/.redditWallpapers
-var downloadDirectory = path.join(getUserHome(), '.redditWallpapers');
+const downloadDirectory = process.argv[3] || path.join(getUserHome(), '.redditWallpapers');
 
 // request reddit API last hot posts
 request(wallpapersPath, function(error, response, body) {
@@ -19,23 +19,23 @@ request(wallpapersPath, function(error, response, body) {
         return console.error(error);
     }
 
-    var redditResponse = JSON.parse(body);
+    const redditResponse = JSON.parse(body);
 
     // iterate posts
-    for (var i = 0; i < redditResponse.data.children.length; i++) {
-        var item = redditResponse.data.children[i];
+    for (let i = 0; i < redditResponse.data.children.length; i++) {
+        const item = redditResponse.data.children[i];
 
         // only download imgur links
         if (item.data.domain.indexOf('imgur.com') === -1) {
             continue;
         }
 
-        // create folder if not exists
+        // create folder if it doesn't exist
         mkdirSync(downloadDirectory);
-        var imageUrl = redditResponse.data.children[i].data.url;
+        const imageUrl = redditResponse.data.children[i].data.url;
 
         if (isAlbum(imageUrl)) {
-            var albumId = imageUrl.substr(imageUrl.lastIndexOf('/') + 1, imageUrl.length);
+            const albumId = imageUrl.substr(imageUrl.lastIndexOf('/') + 1, imageUrl.length);
 
             request({
                 url: 'https://api.imgur.com/3/album/' + albumId,
@@ -47,15 +47,15 @@ request(wallpapersPath, function(error, response, body) {
                     console.error(error);
                     return;
                 }
-                var imgurResponse = JSON.parse(body);
+                const imgurResponse = JSON.parse(body);
                 removeAllFilesFolder(downloadDirectory);
-                for (var j = 0; j < imgurResponse.data.images.length; j++) {
+                for (let j = 0; j < imgurResponse.data.images.length; j++) {
                     downloadImage(downloadDirectory, imgurResponse.data.images[j].link, false);
                 }
             });
 
         } else {
-            // only download image if not exists
+            // only download image if it doesn't exist
             downloadImage(downloadDirectory, imageUrl, true);
         }
         return;
@@ -79,7 +79,7 @@ function isAlbum(imgurUrl) {
 }
 
 function removeAllFilesFolder(folderPath) {
-    var files = fs.readdirSync(folderPath);
+    const files = fs.readdirSync(folderPath);
     files.forEach(function (file) {
         // DANGER remove all files under /{userHome}/.redditWallpapers
         fs.unlinkSync(path.join(downloadDirectory, file));
@@ -87,7 +87,7 @@ function removeAllFilesFolder(folderPath) {
 }
 
 function downloadImage(downloadDirectory, imageUrl, removeImages) {
-    var downloadPath = path.join(downloadDirectory, imageUrl.replace(/http:\/\//gi, '').replace(/\//gi, ''));
+    const downloadPath = path.join(downloadDirectory, imageUrl.replace(/http(s?):/gi, '').replace(/\//gi, ''));
 
     // if not exists download image
     if (!fs.existsSync(downloadPath)) {
@@ -96,11 +96,11 @@ function downloadImage(downloadDirectory, imageUrl, removeImages) {
             removeAllFilesFolder(downloadDirectory);
         }
         request(imageUrl).pipe(fs.createWriteStream(downloadPath)).on('finish', function() {
-            var magic = new Magic();
+            const magic = new Magic();
             magic.detectFile(downloadPath, function(err, result) {
                 if (err) throw err;
-                var extension = result.split(' ')[0].toLowerCase();
-                fs.rename(downloadPath, downloadPath + '.' + extension);
+                const extension = result.split(' ')[0].toLowerCase();
+                fs.renameSync(downloadPath, downloadPath + '.' + extension);
             });
         });
     }
