@@ -22,11 +22,11 @@ request(wallpapersPath, function(error, response, body) {
     const redditResponse = JSON.parse(body);
 
     // iterate posts
-    for (var i = 0; i < redditResponse.data.children.length; i++) {
-        var item = redditResponse.data.children[i];
-        var domain = item.data.domain;
-        var isImgur = domain.indexOf('imgur.com') !== -1;
-        var isRedditImage = domain.indexOf('i.redd.it') !== -1;
+    for (let i = 0; i < redditResponse.data.children.length; i++) {
+        const item = redditResponse.data.children[i];
+        const domain = item.data.domain;
+        const isImgur = domain.indexOf('imgur.com') !== -1;
+        const isRedditImage = domain.indexOf('i.redd.it') !== -1;
 
         // only download imgur reddit / links
         if (!isImgur && !isRedditImage) {
@@ -35,8 +35,8 @@ request(wallpapersPath, function(error, response, body) {
 
         // create folder if it doesn't exist
         mkdirSync(downloadDirectory);
-        var postData = redditResponse.data.children[i].data;
-        var imageUrl = isImgur ? postData.url : postData.preview.images[0].source.url;
+        const postData = redditResponse.data.children[i].data;
+        const imageUrl = isImgur ? postData.url : postData.preview.images[0].source.url;
 
         if (isAlbum(imageUrl)) {
             const albumId = imageUrl.substr(imageUrl.lastIndexOf('/') + 1, imageUrl.length);
