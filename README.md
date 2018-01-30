@@ -18,5 +18,5 @@ npm install
 
 ## Usage
 ```bash
-node index.js [ subrddit ]
+node index.js [ subreddit ] [ destination folder ]
 ```
