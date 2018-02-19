@@ -3,6 +3,9 @@ const request = require('request');
 const path = require('path');
 const fs = require('fs');
 const Magic = require('mmmagic').Magic;
+const Entities = require('html-entities').AllHtmlEntities;
+
+const entities = new Entities();
 
 const IMGUR_CLIENT_ID = process.env.IMGUR_CLIENT_ID || '5beb783df007abb';
 
@@ -99,7 +102,7 @@ function downloadImage(downloadDirectory, imageUrl, removeImages) {
         if (removeImages) {
             removeAllFilesFolder(downloadDirectory);
         }
-        request(imageUrl).pipe(fs.createWriteStream(downloadPath)).on('finish', function() {
+        request(entities.decode(imageUrl)).pipe(fs.createWriteStream(downloadPath)).on('finish', function() {
             const magic = new Magic();
             magic.detectFile(downloadPath, function(err, result) {
                 if (err) throw err;
